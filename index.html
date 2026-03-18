@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<!--
+   ______                            __
+  / ____/___  ____ ___  ____  __  __/ /____  _____
+ / /   / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
+/ /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
+\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+                    /_/
+        Created with Perplexity Computer
+        https://www.perplexity.ai/computer
+-->
+
+<!-- Perplexity Computer Attribution — SEO Meta Tags -->
+<meta name="generator" content="Perplexity Computer">
+<meta name="author" content="Perplexity Computer">
+<meta property="og:see_also" content="https://www.perplexity.ai/computer">
+<link rel="author" href="https://www.perplexity.ai/computer">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北京市人房关系桑基图</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+    <style>
+        :root {
+            --color-white: rgba(255, 255, 255, 1);
+            --color-black: rgba(0, 0, 0, 1);
+            --color-cream-50: rgba(252, 252, 249, 1);
+            --color-cream-100: rgba(255, 255, 253, 1);
+            --color-gray-200: rgba(245, 245, 245, 1);
+            --color-gray-300: rgba(167, 169, 169, 1);
+            --color-gray-400: rgba(119, 124, 124, 1);
+            --color-slate-500: rgba(98, 108, 113, 1);
+            --color-brown-600: rgba(94, 82, 64, 1);
+            --color-charcoal-700: rgba(31, 33, 33, 1);
+            --color-charcoal-800: rgba(38, 40, 40, 1);
+            --color-slate-900: rgba(19, 52, 59, 1);
+            --color-teal-300: rgba(50, 184, 198, 1);
+            --color-teal-500: rgba(33, 128, 141, 1);
+            --color-teal-600: rgba(29, 116, 128, 1);
+            --color-brown-600-rgb: 94, 82, 64;
+            --color-teal-500-rgb: 33, 128, 141;
+            --color-background: var(--color-cream-50);
+            --color-surface: var(--color-cream-100);
+            --color-text: var(--color-slate-900);
+            --color-text-secondary: var(--color-slate-500);
+            --color-primary: var(--color-teal-500);
+            --color-border: rgba(var(--color-brown-600-rgb), 0.2);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-background: var(--color-charcoal-700);
+                --color-surface: var(--color-charcoal-800);
+                --color-text: var(--color-gray-200);
+                --color-text-secondary: rgba(167, 169, 169, 0.7);
+                --color-primary: var(--color-teal-300);
+                --color-border: rgba(119, 124, 124, 0.3);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--color-background);
+            color: var(--color-text);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--color-text);
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            background: var(--color-primary);
+            color: var(--color-cream-50);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: var(--color-teal-600);
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        label {
+            font-size: 0.9rem;
+            color: var(--color-text);
+            font-weight: 500;
+        }
+
+        select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        #chart {
+            background: var(--color-surface);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow-x: auto;
+            overflow-y: visible;
+        }
+
+        .tooltip {
+            position: absolute;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        .tooltip-title {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .tooltip-content {
+            line-height: 1.6;
+        }
+
+        .legend {
+            margin-top: 2rem;
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .legend-title {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+            color: var(--color-text);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--color-text-secondary);
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .animated {
+            animation: fadeIn 0.8s ease;
+        }
+
+        /* Data Table Styles */
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--color-primary);
+            display: inline-block;
+        }
+
+        .section-subtitle {
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .data-table-wrapper {
+            margin-top: 3rem;
+            background: var(--color-surface);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+
+        .data-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            padding: 0.6rem 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.78rem;
+            color: var(--color-cream-50);
+            white-space: nowrap;
+        }
+
+        .data-table thead th.col-seq { background: #5E7A8A; border-radius: 6px 0 0 0; }
+        .data-table thead th.col-residency { background: #7FB8CC; }
+        .data-table thead th.col-hukou { background: #8FB1CC; }
+        .data-table thead th.col-area { background: #90B4CE; }
+        .data-table thead th.col-form { background: #A8B8C8; }
+        .data-table thead th.col-ownership { background: #C8A870; }
+        .data-table thead th.col-land { background: #A8A8D8; }
+        .data-table thead th.col-type { background: #90C48A; }
+        .data-table thead th.col-people { background: #ED8B73; }
+        .data-table thead th.col-households { background: #E8A870; }
+        .data-table thead th.col-housing { background: #7FB8CC; border-radius: 0 6px 0 0; }
+
+        .data-table tbody td {
+            padding: 0.5rem 0.75rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(var(--color-brown-600-rgb), 0.08);
+            transition: background 0.2s ease;
+        }
+
+        .data-table tbody tr:hover td {
+            background: rgba(var(--color-teal-500-rgb), 0.06);
+        }
+
+        .data-table tbody td.cell-text {
+            text-align: left;
+        }
+
+        .data-table tbody td.cell-num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            font-weight: 500;
+        }
+
+        .data-table tbody td.cell-na {
+            color: var(--color-gray-300);
+            font-style: italic;
+        }
+
+        /* Color chips in table cells */
+        .cell-chip {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .chip-changzhu { background: rgba(168,213,226,0.25); color: #3A7A8A; }
+        .chip-shiyou { background: rgba(184,224,210,0.25); color: #4A8A6A; }
+        .chip-jingji { background: rgba(193,216,232,0.25); color: #4A6A8A; }
+        .chip-feijingji { background: rgba(184,221,168,0.25); color: #4A7A3A; }
+        .chip-ziyou { background: rgba(244,213,141,0.25); color: #8A7A3A; }
+        .chip-zufang { background: rgba(237,139,115,0.2); color: #8A4A3A; }
+        .chip-sushe { background: rgba(168,168,216,0.25); color: #5A5A8A; }
+        .chip-chengzhen { background: rgba(200,200,220,0.2); color: #5A5A7A; }
+        .chip-nongcun { background: rgba(200,220,200,0.2); color: #4A6A4A; }
+        .chip-jiating { background: rgba(200,200,230,0.15); color: #5A5A7A; }
+        .chip-jiti { background: rgba(220,200,200,0.15); color: #7A5A5A; }
+
+        /* Subtotal rows */
+        .data-table tbody tr.subtotal-row td {
+            background: rgba(var(--color-teal-500-rgb), 0.06);
+            font-weight: 600;
+            border-top: 2px solid rgba(var(--color-teal-500-rgb), 0.15);
+        }
+
+        .data-table tbody tr.grand-total-row td {
+            background: rgba(var(--color-teal-500-rgb), 0.1);
+            font-weight: 700;
+            font-size: 0.85rem;
+            border-top: 2px solid var(--color-primary);
+        }
+
+        /* Analysis Section Styles */
+        .analysis-wrapper {
+            margin-top: 3rem;
+            background: var(--color-surface);
+            border-radius: 12px;
+            padding: 2rem 2.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .analysis-wrapper h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+            padding-left: 0.75rem;
+            border-left: 3px solid var(--color-primary);
+        }
+
+        .analysis-wrapper h3:first-of-type {
+            margin-top: 1rem;
+        }
+
+        .analysis-wrapper p {
+            font-size: 0.92rem;
+            line-height: 1.85;
+            color: var(--color-text);
+            margin-bottom: 0.8rem;
+            text-align: justify;
+        }
+
+        .analysis-wrapper .stat-highlight {
+            display: inline;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        .analysis-wrapper .stat-warn {
+            display: inline;
+            font-weight: 600;
+            color: #C0392B;
+        }
+
+        .analysis-wrapper ul {
+            margin: 0.5rem 0 1rem 1.5rem;
+            font-size: 0.92rem;
+            line-height: 1.85;
+            color: var(--color-text);
+        }
+
+        .analysis-wrapper li {
+            margin-bottom: 0.4rem;
+        }
+
+        .key-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .metric-card {
+            background: var(--color-background);
+            border-radius: 10px;
+            padding: 1.25rem;
+            border: 1px solid var(--color-border);
+            text-align: center;
+        }
+
+        .metric-card .metric-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            display: block;
+        }
+
+        .metric-card .metric-value.warn {
+            color: #C0392B;
+        }
+
+        .metric-card .metric-label {
+            font-size: 0.82rem;
+            color: var(--color-text-secondary);
+            margin-top: 0.3rem;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>北京市人房关系桑基图</h1>
+        <p class="subtitle">单位：万套（间） / 万人</p>
+        
+        <div class="controls">
+            <button class="btn" id="playBtn">▶ 播放动画</button>
+            <label for="metricSelect">数据指标：</label>
+            <select id="metricSelect">
+                <option value="people">人数（万人）</option>
+                <option value="households">户数（万户）</option>
+                <option value="housing" selected>房屋套数（万套/间）</option>
+                <option value="combined">人房联动</option>
+            </select>
+        </div>
+
+        <div id="chart"></div>
+        <div class="tooltip"></div>
+        
+        <div class="legend">
+            <div class="legend-group">
+                <div class="legend-title">人口类型</div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(to bottom, #A8D5E2, #7FB8CC);"></div>
+                    <span>常住人口</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(to bottom, #B8E0D2, #8AC4B0);"></div>
+                    <span>实有人口</span>
+                </div>
+            </div>
+            <div class="legend-group">
+                <div class="legend-title">户籍类型</div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(to bottom, #C1D8E8, #8FB1CC);"></div>
+                    <span>京籍</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(to bottom, #B8DDA8, #90C48A);"></div>
+                    <span>非京籍</span>
+                </div>
+            </div>
+            <div class="legend-group">
+                <div class="legend-title">保有权</div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #F4D58D;"></div>
+                    <span>自有</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ED8B73;"></div>
+                    <span>租房</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #A8A8D8;"></div>
+                    <span>宿舍</span>
+                </div>
+            </div>
+            <div class="legend-group">
+                <div class="legend-title">住房类型</div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #C6E5B2;"></div>
+                    <span>商品住房</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #F9C74F;"></div>
+                    <span>已购公房</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #90B4CE;"></div>
+                    <span>保障性住房</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #C8B6E2;"></div>
+                    <span>宅基地住房</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #F4A4B4;"></div>
+                    <span>其他类型</span>
+                </div>
+            </div>
+        </div>
+        <!-- Data Table Section -->
+        <div id="data-table-section"></div>
+
+        <!-- Analysis Section -->
+        <div id="analysis-section"></div>
+
+        <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--color-border); text-align: center;">
+            <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer" style="font-size: 0.8rem; color: var(--color-text-secondary); text-decoration: none; opacity: 0.7;">Created with Perplexity Computer</a>
+        </footer>
+    </div>
+
+    <script>
+        const residencyTotals = {
+            '常住人口': 2185.9,
+            '实有人口': 415
+        };
+
+        const rawData = [
+            {seq: 1, residency: "常住", hukou: "京籍", area: "城镇", form: "家庭", ownership: "自有", land: "国有", type: "商品住房", people: 446, households: 178, housing: 178},
+            {seq: 2, residency: "常住", hukou: "京籍", area: "城镇", form: "家庭", ownership: "自有", land: "国有", type: "已购公房", people: 185, households: 74, housing: 74},
+            {seq: 3, residency: "常住", hukou: "京籍", area: "城镇", form: "家庭", ownership: "自有", land: "国有", type: "其他产权型保障性住房", people: 148, households: 59, housing: 62},
+            {seq: 4, residency: "常住", hukou: "京籍", area: "城镇", form: "家庭", ownership: "自有", land: "国有", type: "共有产权住房", people: 8, households: 3, housing: 3},
+            {seq: 5, residency: "常住", hukou: "京籍", area: "城镇", form: "家庭", ownership: "自有", land: "国有", type: "商改住房屋", people: 35, households: 14, housing: 14},
+            {seq: 6, residency: "常住", hukou: "京籍", area: "城镇", form: "家庭", ownership: "自有", land: "集体", type: "宅基地住房", people: 38, households: 17, housing: 17},
+            {seq: 7, residency: "常住", hukou: "京籍", area: "城镇", form: "家庭", ownership: "自有", land: "集体", type: "小产权房屋", people: 22, households: 10, housing: 10},
+            {seq: 8, residency: "常住", hukou: "京籍", area: "城镇", form: "家庭", ownership: "自有", land: "国有", type: "与父母或子女合住", people: 80, households: 38, housing: 0},
+            {seq: 9, residency: "常住", hukou: "京籍", area: "城镇", form: "家庭", ownership: "租房", land: "国有", type: "公共租赁住房", people: 17, households: 8, housing: 8},
+            {seq: 10, residency: "常住", hukou: "京籍", area: "城镇", form: "家庭", ownership: "租房", land: "国有", type: "直管自管公房", people: 34, households: 16, housing: 16},
+            {seq: 11, residency: "常住", hukou: "京籍", area: "城镇", form: "家庭", ownership: "租房", land: "国有", type: "商品住房", people: 15, households: 7, housing: 7},
+            {seq: 12, residency: "常住", hukou: "京籍", area: "城镇", form: "家庭", ownership: "租房", land: "国有", type: "已购公房", people: 4, households: 2, housing: 2},
+            {seq: 13, residency: "常住", hukou: "京籍", area: "城镇", form: "集体", ownership: "宿舍", land: "国有", type: "学生宿舍", people: 80, households: 0, housing: 20},
+            {seq: 14, residency: "常住", hukou: "京籍", area: "城镇", form: "集体", ownership: "租房", land: "国有", type: "公寓", people: 15, households: 0, housing: 6},
+            {seq: 15, residency: "常住", hukou: "京籍", area: "农村", form: "家庭", ownership: "自有", land: "集体", type: "宅基地住房", people: 172, households: 78, housing: 78},
+            {seq: 16, residency: "常住", hukou: "京籍", area: "农村", form: "家庭", ownership: "自有", land: "国有", type: "商品住房", people: 44, households: 20, housing: 20},
+            {seq: 17, residency: "常住", hukou: "京籍", area: "农村", form: "家庭", ownership: "自有", land: "国有", type: "商改住房屋", people: 4, households: 2, housing: 2},
+            {seq: 18, residency: "常住", hukou: "非京籍", area: "城镇", form: "家庭", ownership: "自有", land: "国有", type: "商品住房", people: 154, households: 63, housing: 63},
+            {seq: 19, residency: "常住", hukou: "非京籍", area: "城镇", form: "家庭", ownership: "自有", land: "国有", type: "共有产权住房", people: 3, households: 1, housing: 1},
+            {seq: 20, residency: "常住", hukou: "非京籍", area: "城镇", form: "家庭", ownership: "自有", land: "国有", type: "商改住房屋", people: 10, households: 4, housing: 4},
+            {seq: 21, residency: "常住", hukou: "非京籍", area: "城镇", form: "家庭", ownership: "自有", land: "国有", type: "与父母或子女合住", people: 15, households: 6, housing: 0},
+            {seq: 22, residency: "常住", hukou: "非京籍", area: "城镇", form: "家庭", ownership: "自有", land: "集体", type: "小产权房屋", people: 5, households: 2, housing: 2},
+            {seq: 23, residency: "常住", hukou: "非京籍", area: "城镇", form: "家庭", ownership: "租房", land: "国有", type: "公共租赁住房", people: 17, households: 8, housing: 8},
+            {seq: 24, residency: "常住", hukou: "非京籍", area: "城镇", form: "家庭", ownership: "租房", land: "国有", type: "其他产权型保障性住房", people: 23, households: 11, housing: 11},
+            {seq: 25, residency: "常住", hukou: "非京籍", area: "城镇", form: "家庭", ownership: "租房", land: "国有", type: "已购公房", people: 88, households: 42, housing: 42},
+            {seq: 26, residency: "常住", hukou: "非京籍", area: "城镇", form: "家庭", ownership: "租房", land: "国有", type: "商品住房", people: 88, households: 42, housing: 42},
+            {seq: 27, residency: "常住", hukou: "非京籍", area: "城镇", form: "家庭", ownership: "租房", land: "国有", type: "商改住房屋", people: 8, households: 4, housing: 4},
+            {seq: 28, residency: "常住", hukou: "非京籍", area: "城镇", form: "家庭", ownership: "租房", land: "国有", type: "合租群体", people: 76, households: 36, housing: 0},
+            {seq: 29, residency: "常住", hukou: "非京籍", area: "城镇", form: "集体", ownership: "租房", land: "国有", type: "产业工人宿舍", people: 97, households: 0, housing: 28},
+            {seq: 30, residency: "常住", hukou: "非京籍", area: "城镇", form: "集体", ownership: "租房", land: "国有", type: "白领公寓", people: 16, households: 0, housing: 6},
+            {seq: 31, residency: "常住", hukou: "非京籍", area: "城镇", form: "家庭", ownership: "租房", land: "集体", type: "宅基地住房", people: 54, households: 26, housing: 26},
+            {seq: 32, residency: "常住", hukou: "非京籍", area: "城镇", form: "家庭", ownership: "租房", land: "集体", type: "小产权房屋", people: 33, households: 16, housing: 16},
+            {seq: 33, residency: "常住", hukou: "非京籍", area: "城镇", form: "家庭", ownership: "租房", land: "集体", type: "合租群体", people: 75, households: 36, housing: 36},
+            {seq: 34, residency: "常住", hukou: "非京籍", area: "城镇", form: "集体", ownership: "租房", land: "集体", type: "农村公寓（城中村）", people: 80, households: 0, housing: 20},
+            {seq: 35, residency: "实有", hukou: "非京籍", area: "城镇", form: "集体", ownership: "租房", land: "国有", type: "商品住房", people: 25, households: 0, housing: 5},
+            {seq: 36, residency: "实有", hukou: "非京籍", area: "城镇", form: "集体", ownership: "租房", land: "国有", type: "商改住房屋", people: 35, households: 0, housing: 10},
+            {seq: 37, residency: "实有", hukou: "非京籍", area: "城镇", form: "集体", ownership: "租房", land: "集体", type: "宅基地住房", people: 260, households: 0, housing: 30},
+            {seq: 38, residency: "实有", hukou: "非京籍", area: "城镇", form: "集体", ownership: "租房", land: "集体", type: "小产权房屋", people: 35, households: 0, housing: 10},
+            {seq: 39, residency: "实有", hukou: "非京籍", area: "城镇", form: "集体", ownership: "租房", land: "集体", type: "农村公寓（城中村）", people: 60, households: 0, housing: 15}
+        ];
+
+        const colorScheme = {
+            residency: {
+                '常住人口': ['#A8D5E2', '#7FB8CC'],
+                '实有人口': ['#B8E0D2', '#8AC4B0']
+            },
+            hukou: {
+                '京籍': ['#C1D8E8', '#8FB1CC'],
+                '非京籍': ['#B8DDA8', '#90C48A']
+            },
+            ownership: {
+                '自有': ['#FFE4A3', '#F4D58D'],
+                '租房': ['#F5B89D', '#ED8B73'],
+                '宿舍': ['#C4C4E8', '#A8A8D8']
+            },
+            type: {
+                '商品住房': '#C6E5B2',
+                '已购公房': '#F9C74F',
+                '其他产权型保障性住房': '#90B4CE',
+                '共有产权住房': '#90B4CE',
+                '公共租赁住房': '#90B4CE',
+                '商改住房屋': '#F4A4B4',
+                '宅基地住房': '#C8B6E2',
+                '小产权房屋': '#E8B4C8',
+                '与父母或子女合住': '#D4A5A5',
+                '直管自管公房': '#F9C74F',
+                '学生宿舍': '#A8A8D8',
+                '公寓': '#E8C4D8',
+                '产业工人宿舍': '#D4B8E0',
+                '白领公寓': '#E8C4D8',
+                '合租群体': '#F4C8C8',
+                '农村公寓（城中村）': '#E8B4C8'
+            }
+        };
+
+        let currentMetric = 'housing';
+        let svg, tooltip, defs;
+        const width = 1600;
+        const height = 850;
+
+        function prepareData(metric) {
+            const metricKey = metric === 'people' ? 'people' : 
+                            metric === 'households' ? 'households' : 'housing';
+            
+            const nodes = new Map();
+            const links = [];
+            const nodeMetrics = new Map();
+
+            rawData.forEach(d => {
+                if (metric === 'combined') {
+                    if (d.housing === 0 && d.people === 0 && d.households === 0) return;
+                } else {
+                    if (d[metricKey] === 0) return;
+                }
+
+                const residencyNode = d.residency === '常住' ? '常住人口' : '实有人口';
+                const hukouNode = d.residency === '实有' ? '非京籍' : d.hukou;
+                const ownershipNode = `${d.ownership}`;
+                const typeNode = d.type;
+
+                if (!nodeMetrics.has(residencyNode)) {
+                    nodeMetrics.set(residencyNode, { people: 0, households: 0, housing: 0 });
+                }
+                if (!nodeMetrics.has(hukouNode)) {
+                    nodeMetrics.set(hukouNode, { people: 0, households: 0, housing: 0 });
+                }
+                if (!nodeMetrics.has(ownershipNode)) {
+                    nodeMetrics.set(ownershipNode, { people: 0, households: 0, housing: 0 });
+                }
+                if (!nodeMetrics.has(typeNode)) {
+                    nodeMetrics.set(typeNode, { people: 0, households: 0, housing: 0 });
+                }
+
+                nodeMetrics.get(residencyNode).people += d.people;
+                nodeMetrics.get(residencyNode).households += d.households;
+                nodeMetrics.get(residencyNode).housing += d.housing;
+                nodeMetrics.get(hukouNode).people += d.people;
+                nodeMetrics.get(hukouNode).households += d.households;
+                nodeMetrics.get(hukouNode).housing += d.housing;
+                nodeMetrics.get(ownershipNode).people += d.people;
+                nodeMetrics.get(ownershipNode).households += d.households;
+                nodeMetrics.get(ownershipNode).housing += d.housing;
+                nodeMetrics.get(typeNode).people += d.people;
+                nodeMetrics.get(typeNode).households += d.households;
+                nodeMetrics.get(typeNode).housing += d.housing;
+
+                if (!nodes.has(residencyNode)) {
+                    nodes.set(residencyNode, {
+                        id: residencyNode,
+                        layer: 0,
+                        gradientId: `grad-residency-${residencyNode}`,
+                        colors: colorScheme.residency[residencyNode]
+                    });
+                }
+
+                if (!nodes.has(hukouNode)) {
+                    nodes.set(hukouNode, {
+                        id: hukouNode,
+                        layer: 1,
+                        gradientId: `grad-hukou-${hukouNode}`,
+                        colors: colorScheme.hukou[hukouNode]
+                    });
+                }
+                
+                if (!nodes.has(ownershipNode)) {
+                    nodes.set(ownershipNode, {
+                        id: ownershipNode,
+                        layer: 2,
+                        gradientId: `grad-ownership-${ownershipNode}`,
+                        colors: colorScheme.ownership[d.ownership]
+                    });
+                }
+                
+                if (!nodes.has(typeNode)) {
+                    nodes.set(typeNode, {
+                        id: typeNode,
+                        layer: 3,
+                        color: colorScheme.type[d.type]
+                    });
+                }
+            });
+
+            nodeMetrics.forEach((metrics, nodeId) => {
+                if (nodes.has(nodeId)) {
+                    const node = nodes.get(nodeId);
+                    node.peopleValue = metrics.people;
+                    node.householdsValue = metrics.households;
+                    node.housingValue = metrics.housing;
+                }
+            });
+
+            rawData.forEach(d => {
+                const metricValue = metric === 'combined' ? 
+                    (d.housing > 0 ? d.housing : d.people) : d[metricKey];
+                
+                if (metricValue === 0) return;
+
+                const residencyNode = d.residency === '常住' ? '常住人口' : '实有人口';
+                const hukouNode = d.residency === '实有' ? '非京籍' : d.hukou;
+                const ownershipNode = `${d.ownership}`;
+                const typeNode = d.type;
+
+                links.push({
+                    source: residencyNode,
+                    target: hukouNode,
+                    value: d[metricKey],
+                    rawData: d
+                });
+
+                links.push({
+                    source: hukouNode,
+                    target: ownershipNode,
+                    value: d[metricKey],
+                    rawData: d
+                });
+
+                links.push({
+                    source: ownershipNode,
+                    target: typeNode,
+                    value: d[metricKey],
+                    rawData: d
+                });
+            });
+
+            const nodeArray = Array.from(nodes.values());
+            const aggregatedLinks = [];
+            const linkMap = new Map();
+
+            links.forEach(link => {
+                const key = `${link.source}-${link.target}`;
+                if (!linkMap.has(key)) {
+                    linkMap.set(key, {
+                        source: link.source,
+                        target: link.target,
+                        value: 0
+                    });
+                }
+                linkMap.get(key).value += link.value;
+            });
+
+            aggregatedLinks.push(...linkMap.values());
+
+            return { nodes: nodeArray, links: aggregatedLinks };
+        }
+
+        function drawSankey(metric, animate = false) {
+            d3.select('#chart').select('svg').remove();
+
+            const data = prepareData(metric);
+
+            svg = d3.select('#chart')
+                .append('svg')
+                .attr('viewBox', `0 0 ${width} ${height}`)
+                .attr('preserveAspectRatio', 'xMidYMid meet')
+                .style('width', '100%')
+                .style('height', 'auto')
+                .style('min-width', '900px')
+                .attr('class', animate ? 'animated' : '');
+
+            const sankey = d3.sankey()
+                .nodeId(d => d.id)
+                .nodeWidth(25)
+                .nodePadding(10)
+                .nodeAlign(d3.sankeyJustify)
+                .linkSort(null)
+                .extent([[80, 50], [width - 250, height - 50]]);
+
+            sankey.linkPath = function() {
+                return function(d) {
+                    const x0 = d.source.x1;
+                    const x1 = d.target.x0;
+                    const xi = d3.interpolateNumber(x0, x1);
+                    const x2 = xi(0.4);
+                    const x3 = xi(0.6);
+                    const y0 = d.y0;
+                    const y1 = d.y1;
+                    return `M${x0},${y0} C${x2},${y0} ${x3},${y1} ${x1},${y1}`;
+                };
+            }();
+
+            const graph = sankey({
+                nodes: data.nodes.map(d => Object.assign({}, d)),
+                links: data.links.map(d => Object.assign({}, d))
+            });
+
+            // === Post-process layer 3 (housing type) nodes ===
+            // 1. Find the max occupied vertical span of left columns (layers 0-2)
+            const leftNodes = graph.nodes.filter(n => n.layer !== 3);
+            const leftMinY = d3.min(leftNodes, n => n.y0);
+            const leftMaxY = d3.max(leftNodes, n => n.y1);
+            const leftTotalSpan = leftMaxY - leftMinY;
+
+            // 2. Make layer 3 total height ~15% taller than left columns
+            const layer3Nodes = graph.nodes.filter(n => n.layer === 3);
+            const scaleFactor = 1.20;
+            const targetTotalHeight = leftTotalSpan * scaleFactor;
+
+            // 3. Sort layer 3 nodes by descending value (housing units)
+            layer3Nodes.sort((a, b) => b.value - a.value);
+
+            // 4. Calculate total value and redistribute by relative proportion
+            const totalValue = d3.sum(layer3Nodes, n => n.value);
+            const nodePaddingL3 = 6;
+            const totalPadding = nodePaddingL3 * (layer3Nodes.length - 1);
+            const availableHeight = targetTotalHeight - totalPadding;
+
+            // Center the layer 3 column vertically relative to the left columns
+            const layer3CenterY = (leftMinY + leftMaxY) / 2;
+            const layer3StartY = layer3CenterY - targetTotalHeight / 2;
+
+            // First pass: calculate proportional heights with min height
+            const minNodeHeight = 6;
+            const minLabelSpacing = 18; // ensure labels don't overlap (font is ~13px)
+            let currentY = layer3StartY;
+            layer3Nodes.forEach(node => {
+                const proportion = node.value / totalValue;
+                const rawHeight = availableHeight * proportion;
+                const nodeHeight = Math.max(minNodeHeight, rawHeight);
+                // Ensure minimum center-to-center distance for label readability
+                const effectiveStep = Math.max(nodeHeight + nodePaddingL3, minLabelSpacing);
+                node.y0 = currentY;
+                node.y1 = currentY + nodeHeight;
+                currentY += effectiveStep;
+            });
+
+            // 5. Update links connected to layer 3 nodes
+            // For each layer 3 node, redistribute incoming link y-positions
+            layer3Nodes.forEach(node => {
+                const incomingLinks = graph.links.filter(l => l.target === node);
+                // Sort incoming links by source node y-position for visual consistency
+                incomingLinks.sort((a, b) => a.source.y0 - b.source.y0);
+                const totalLinkValue = d3.sum(incomingLinks, l => l.value);
+                let linkY = node.y0;
+                incomingLinks.forEach(link => {
+                    const linkHeight = (link.value / totalLinkValue) * (node.y1 - node.y0);
+                    link.y1 = linkY + linkHeight / 2;
+                    link.width = linkHeight;
+                    linkY += linkHeight;
+                });
+            });
+            // === End post-processing ===
+
+            defs = svg.append('defs');
+            
+            graph.nodes.forEach(node => {
+                if (node.gradientId) {
+                    const gradient = defs.append('linearGradient')
+                        .attr('id', node.gradientId)
+                        .attr('x1', '0%')
+                        .attr('y1', '0%')
+                        .attr('x2', '0%')
+                        .attr('y2', '100%');
+                    
+                    gradient.append('stop')
+                        .attr('offset', '0%')
+                        .attr('stop-color', node.colors[0]);
+                    
+                    gradient.append('stop')
+                        .attr('offset', '100%')
+                        .attr('stop-color', node.colors[1]);
+                }
+            });
+
+            graph.links.forEach((link, i) => {
+                const gradient = defs.append('linearGradient')
+                    .attr('id', `link-gradient-${i}`)
+                    .attr('gradientUnits', 'userSpaceOnUse')
+                    .attr('x1', link.source.x1)
+                    .attr('x2', link.target.x0);
+                
+                const sourceNode = graph.nodes.find(n => n.id === link.source.id);
+                const targetNode = graph.nodes.find(n => n.id === link.target.id);
+                
+                gradient.append('stop')
+                    .attr('offset', '0%')
+                    .attr('stop-color', sourceNode.color || sourceNode.colors[1])
+                    .attr('stop-opacity', 0.5);
+                
+                gradient.append('stop')
+                    .attr('offset', '100%')
+                    .attr('stop-color', targetNode.color || targetNode.colors[1])
+                    .attr('stop-opacity', 0.5);
+                
+                link.gradientId = `link-gradient-${i}`;
+            });
+
+            const linkGroup = svg.append('g')
+                .attr('class', 'links')
+                .selectAll('path')
+                .data(graph.links)
+                .join('path')
+                .attr('d', sankey.linkPath)
+                .attr('stroke', d => `url(#${d.gradientId})`)
+                .attr('stroke-width', d => Math.max(1, d.width))
+                .attr('fill', 'none')
+                .attr('opacity', animate ? 0 : 0.6)
+                .style('stroke-dasharray', function() {
+                    return animate ? this.getTotalLength() : 0;
+                })
+                .style('stroke-dashoffset', function() {
+                    return animate ? this.getTotalLength() : 0;
+                })
+                .on('mouseenter', function(event, d) {
+                    d3.select(this).attr('opacity', 0.7);
+                    showTooltip(event, `
+                        <div class="tooltip-title">${d.source.id} → ${d.target.id}</div>
+                        <div class="tooltip-content">
+                            ${metric === 'people' ? '人数' : metric === 'households' ? '户数' : '房屋套数'}: ${d.value.toFixed(1)} ${metric === 'people' ? '万人' : metric === 'households' ? '万户' : '万套/间'}
+                        </div>
+                    `);
+                })
+                .on('mouseleave', function() {
+                    d3.select(this).attr('opacity', 0.4);
+                    hideTooltip();
+                });
+
+            if (animate) {
+                linkGroup.transition()
+                    .duration(2000)
+                    .delay((d, i) => {
+                        const sourceLayer = graph.nodes.find(n => n.id === d.source.id).layer;
+                        return sourceLayer * 600 + i * 15;
+                    })
+                    .ease(d3.easeCubicInOut)
+                    .style('stroke-dashoffset', 0)
+                    .attr('opacity', 0.6);
+            }
+
+            const nodeGroup = svg.append('g')
+                .attr('class', 'nodes')
+                .selectAll('rect')
+                .data(graph.nodes)
+                .join('rect')
+                .attr('x', d => d.x0)
+                .attr('y', d => d.y0)
+                .attr('height', d => animate ? 0 : d.y1 - d.y0)
+                .attr('width', d => d.x1 - d.x0)
+                .attr('fill', d => d.gradientId ? `url(#${d.gradientId})` : d.color)
+                .attr('opacity', 0.9)
+                .attr('rx', 4)
+                .attr('ry', 4)
+                .on('mouseenter', function(event, d) {
+                    d3.select(this).attr('opacity', 1);
+                    const totalValue = d.value;
+                    showTooltip(event, `
+                        <div class="tooltip-title">${d.id}</div>
+                        <div class="tooltip-content">
+                            总计: ${totalValue.toFixed(1)} ${metric === 'people' ? '万人' : metric === 'households' ? '万户' : '万套/间'}
+                        </div>
+                    `);
+                })
+                .on('mouseleave', function() {
+                    d3.select(this).attr('opacity', 0.9);
+                    hideTooltip();
+                });
+
+            if (animate) {
+                nodeGroup.transition()
+                    .duration(800)
+                    .delay(d => d.layer * 600)
+                    .ease(d3.easeCubicOut)
+                    .attr('height', d => d.y1 - d.y0);
+            }
+
+            const labelGroup = svg.append('g').attr('class', 'labels');
+
+            graph.nodes.forEach(node => {
+                // Layer 3 (housing types) labels go to the right; others use midpoint rule
+                const isRightColumn = node.layer === 3;
+                const isLeftSide = isRightColumn ? true : node.x0 < width / 2;
+                const x = isLeftSide ? node.x1 + 6 : node.x0 - 6;
+                const y = (node.y1 + node.y0) / 2;
+                const anchor = isLeftSide ? 'start' : 'end';
+
+                if (metric === 'combined') {
+                    if (node.layer === 3) {
+                        labelGroup.append('text')
+                            .attr('x', x)
+                            .attr('y', y)
+                            .attr('dy', '0.35em')
+                            .attr('text-anchor', anchor)
+                            .attr('font-size', '13px')
+                            .attr('font-weight', '500')
+                            .attr('fill', 'var(--color-text)')
+                            .attr('opacity', animate ? 0 : 1)
+                            .text(`${node.id} ${node.housingValue.toFixed(0)}万套/间`);
+                    } else {
+                        const nameText = labelGroup.append('text')
+                            .attr('x', x)
+                            .attr('y', y - 12)
+                            .attr('text-anchor', anchor)
+                            .attr('font-size', '13px')
+                            .attr('font-weight', '500')
+                            .attr('fill', 'var(--color-text)')
+                            .attr('opacity', animate ? 0 : 1)
+                            .text(node.id);
+
+                        const housingText = labelGroup.append('text')
+                            .attr('x', x)
+                            .attr('y', y + 4)
+                            .attr('text-anchor', anchor)
+                            .attr('font-size', '12px')
+                            .attr('font-weight', '500')
+                            .attr('fill', 'var(--color-text)')
+                            .attr('opacity', animate ? 0 : 1)
+                            .text(`${node.housingValue.toFixed(0)}万套/间`);
+
+                        const detailText = labelGroup.append('text')
+                            .attr('x', x)
+                            .attr('y', y + 20)
+                            .attr('text-anchor', anchor)
+                            .attr('font-size', '11px')
+                            .attr('fill', 'var(--color-text-secondary)')
+                            .attr('opacity', animate ? 0 : 1)
+                            .text(`(${node.peopleValue.toFixed(0)}万人，${node.householdsValue.toFixed(0)}万户)`);
+                    }
+                } else {
+                    labelGroup.append('text')
+                        .attr('x', x)
+                        .attr('y', y)
+                        .attr('dy', '0.35em')
+                        .attr('text-anchor', anchor)
+                        .attr('font-size', '13px')
+                        .attr('font-weight', '500')
+                        .attr('fill', 'var(--color-text)')
+                        .attr('opacity', animate ? 0 : 1)
+                        .text(`${node.id} (${node.value.toFixed(0)})`);
+                }
+            });
+
+            if (animate) {
+                labelGroup.selectAll('text')
+                    .transition()
+                    .duration(600)
+                    .delay(d => {
+                        const node = graph.nodes.find(n => 
+                            d && d.id ? n.id === d.id : 
+                            d && d.layer !== undefined ? n.layer === d.layer : 0
+                        );
+                        return node ? node.layer * 600 + 400 : 0;
+                    })
+                    .attr('opacity', 1);
+            }
+        }
+
+        function showTooltip(event, content) {
+            tooltip = d3.select('.tooltip');
+            tooltip.html(content)
+                .style('left', `${event.pageX + 15}px`)
+                .style('top', `${event.pageY - 10}px`)
+                .classed('show', true);
+        }
+
+        function hideTooltip() {
+            d3.select('.tooltip').classed('show', false);
+        }
+
+        document.getElementById('playBtn').addEventListener('click', () => {
+            drawSankey(currentMetric, true);
+        });
+
+        document.getElementById('metricSelect').addEventListener('change', (e) => {
+            currentMetric = e.target.value;
+            drawSankey(currentMetric, false);
+        });
+
+        // =============================================
+        // DATA TABLE RENDERING
+        // =============================================
+        function renderDataTable() {
+            const container = document.getElementById('data-table-section');
+
+            const chipMap = {
+                '常住': 'chip-changzhu', '实有': 'chip-shiyou',
+                '京籍': 'chip-jingji', '非京籍': 'chip-feijingji',
+                '自有': 'chip-ziyou', '租房': 'chip-zufang', '宿舍': 'chip-sushe',
+                '城镇': 'chip-chengzhen', '农村': 'chip-nongcun',
+                '家庭': 'chip-jiating', '集体': 'chip-jiti'
+            };
+
+            function chip(text) {
+                const cls = chipMap[text] || '';
+                return cls ? `<span class="cell-chip ${cls}">${text}</span>` : text;
+            }
+
+            function numCell(val) {
+                if (val === 0 || val === null || val === undefined || isNaN(val)) return '<td class="cell-num cell-na">—</td>';
+                return `<td class="cell-num">${val}</td>`;
+            }
+
+            // Build subtotals
+            const groups = {};
+            rawData.forEach(d => {
+                const key = `${d.residency}-${d.hukou}`;
+                if (!groups[key]) groups[key] = { people: 0, households: 0, housing: 0, residency: d.residency, hukou: d.hukou };
+                groups[key].people += d.people;
+                groups[key].households += (d.households || 0);
+                groups[key].housing += d.housing;
+            });
+
+            let totalPeople = 0, totalHouseholds = 0, totalHousing = 0;
+            rawData.forEach(d => {
+                totalPeople += d.people;
+                totalHouseholds += (d.households || 0);
+                totalHousing += d.housing;
+            });
+
+            let html = `
+            <div class="data-table-wrapper">
+                <div class="section-title">人房关系基础数据表</div>
+                <p class="section-subtitle">数据来源：北京市2023年人口与住房调查 · 单位：万人 / 万户 / 万套（间）</p>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="col-seq">序号</th>
+                            <th class="col-residency">常住/实有</th>
+                            <th class="col-hukou">户籍</th>
+                            <th class="col-area">城乡</th>
+                            <th class="col-form">居住形态</th>
+                            <th class="col-ownership">保有权</th>
+                            <th class="col-land">土地权属</th>
+                            <th class="col-type">居住产品类型</th>
+                            <th class="col-people">人数（万人）</th>
+                            <th class="col-households">户数（万户）</th>
+                            <th class="col-housing">套数（万套/间）</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            let prevGroup = '';
+            rawData.forEach((d, i) => {
+                const currentGroup = `${d.residency}-${d.hukou}`;
+
+                // Insert subtotal before new group
+                if (prevGroup && prevGroup !== currentGroup) {
+                    const g = groups[prevGroup];
+                    const label = `${g.residency === '常住' ? '常住' : '实有'} · ${g.hukou} 小计`;
+                    html += `<tr class="subtotal-row">
+                        <td colspan="7"></td>
+                        <td class="cell-text" style="font-weight:600;">${label}</td>
+                        <td class="cell-num">${g.people}</td>
+                        <td class="cell-num">${g.households || '—'}</td>
+                        <td class="cell-num">${g.housing}</td>
+                    </tr>`;
+                }
+                prevGroup = currentGroup;
+
+                const hhVal = d.form === '集体' ? null : d.households;
+                html += `<tr>
+                    <td>${d.seq}</td>
+                    <td>${chip(d.residency)}</td>
+                    <td>${chip(d.hukou)}</td>
+                    <td>${chip(d.area)}</td>
+                    <td>${chip(d.form)}</td>
+                    <td>${chip(d.ownership)}</td>
+                    <td>${d.land}</td>
+                    <td class="cell-text">${d.type}</td>
+                    ${numCell(d.people)}
+                    ${numCell(hhVal)}
+                    ${numCell(d.housing)}
+                </tr>`;
+            });
+
+            // Final group subtotal
+            if (prevGroup) {
+                const g = groups[prevGroup];
+                const label = `${g.residency === '常住' ? '常住' : '实有'} · ${g.hukou} 小计`;
+                html += `<tr class="subtotal-row">
+                    <td colspan="7"></td>
+                    <td class="cell-text" style="font-weight:600;">${label}</td>
+                    <td class="cell-num">${g.people}</td>
+                    <td class="cell-num">${g.households || '—'}</td>
+                    <td class="cell-num">${g.housing}</td>
+                </tr>`;
+            }
+
+            // Grand total
+            html += `<tr class="grand-total-row">
+                <td colspan="7"></td>
+                <td class="cell-text" style="font-weight:700;">总 计</td>
+                <td class="cell-num">${totalPeople}</td>
+                <td class="cell-num">${totalHouseholds}</td>
+                <td class="cell-num">${totalHousing}</td>
+            </tr>`;
+
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        }
+
+        // =============================================
+        // ANALYSIS SECTION RENDERING
+        // =============================================
+        function renderAnalysis() {
+            const container = document.getElementById('analysis-section');
+
+            // Compute key statistics from rawData
+            // 1. 京籍常住 stats
+            const jj_changzhu = rawData.filter(d => d.residency === '常住' && d.hukou === '京籍');
+            const jj_ziyou = jj_changzhu.filter(d => d.ownership === '自有');
+            const jj_ziyou_people = jj_ziyou.reduce((s, d) => s + d.people, 0);
+            const jj_total_people = jj_changzhu.reduce((s, d) => s + d.people, 0);
+            const jj_ziyou_rate = (jj_ziyou_people / jj_total_people * 100).toFixed(1);
+
+            // 京籍自有中的已购公房
+            const jj_yigou = jj_ziyou.filter(d => d.type === '已购公房');
+            const jj_yigou_housing = jj_yigou.reduce((s, d) => s + d.housing, 0);
+            const jj_ziyou_housing = jj_ziyou.reduce((s, d) => s + d.housing, 0);
+            const jj_yigou_rate = (jj_yigou_housing / jj_ziyou_housing * 100).toFixed(1);
+
+            // 京籍自有中的商品房
+            const jj_shangpin_zy = jj_ziyou.filter(d => d.type === '商品住房');
+            const jj_shangpin_zy_housing = jj_shangpin_zy.reduce((s, d) => s + d.housing, 0);
+            const jj_shangpin_rate = (jj_shangpin_zy_housing / jj_ziyou_housing * 100).toFixed(1);
+
+            // 京籍自有中的宅基地+小产权
+            const jj_informal_zy = jj_ziyou.filter(d => d.type === '宅基地住房' || d.type === '小产权房屋');
+            const jj_informal_housing = jj_informal_zy.reduce((s, d) => s + d.housing, 0);
+            const jj_informal_rate = (jj_informal_housing / jj_ziyou_housing * 100).toFixed(1);
+
+            // 京籍保障性住房 (自有)
+            const jj_baozhang_zy = jj_ziyou.filter(d => d.type === '其他产权型保障性住房' || d.type === '共有产权住房');
+            const jj_baozhang_housing = jj_baozhang_zy.reduce((s, d) => s + d.housing, 0);
+
+            // 2. 非京籍常住 stats
+            const fjj_changzhu = rawData.filter(d => d.residency === '常住' && d.hukou === '非京籍');
+            const fjj_zufang = fjj_changzhu.filter(d => d.ownership === '租房');
+            const fjj_zufang_people = fjj_zufang.reduce((s, d) => s + d.people, 0);
+            const fjj_total_people = fjj_changzhu.reduce((s, d) => s + d.people, 0);
+            const fjj_zufang_rate = (fjj_zufang_people / fjj_total_people * 100).toFixed(1);
+
+            // 非京籍租房中的非正规居住
+            const fjj_informal_rent = fjj_zufang.filter(d =>
+                d.type === '宅基地住房' || d.type === '小产权房屋' ||
+                d.type === '合租群体' || d.type === '农村公寓（城中村）' ||
+                d.type === '产业工人宿舍'
+            );
+            const fjj_informal_rent_people = fjj_informal_rent.reduce((s, d) => s + d.people, 0);
+            const fjj_informal_rent_rate = (fjj_informal_rent_people / fjj_zufang_people * 100).toFixed(1);
+
+            // 3. 实有人口 stats
+            const shiyou = rawData.filter(d => d.residency === '实有');
+            const shiyou_people = shiyou.reduce((s, d) => s + d.people, 0);
+            const shiyou_housing = shiyou.reduce((s, d) => s + d.housing, 0);
+
+            // 实有人口中集体土地
+            const shiyou_jiti = shiyou.filter(d => d.land === '集体');
+            const shiyou_jiti_people = shiyou_jiti.reduce((s, d) => s + d.people, 0);
+            const shiyou_jiti_rate = (shiyou_jiti_people / shiyou_people * 100).toFixed(1);
+
+            // 4. 全市非正规居住合计
+            const allInformal = rawData.filter(d =>
+                d.type === '宅基地住房' || d.type === '小产权房屋' ||
+                d.type === '合租群体' || d.type === '农村公寓（城中村）' ||
+                d.type === '产业工人宿舍' || d.type === '白领公寓' ||
+                d.type === '公寓'
+            );
+            // 租赁中的非正规
+            const rentInformal = rawData.filter(d =>
+                (d.ownership === '租房') && (
+                    d.type === '宅基地住房' || d.type === '小产权房屋' ||
+                    d.type === '合租群体' || d.type === '农村公寓（城中村）'
+                )
+            );
+            const rentInformalPeople = rentInformal.reduce((s, d) => s + d.people, 0);
+
+            // 5. 合租群体
+            const hezuAll = rawData.filter(d => d.type === '合租群体');
+            const hezuPeople = hezuAll.reduce((s, d) => s + d.people, 0);
+
+            // 6. 与父母合住
+            const hezhuAll = rawData.filter(d => d.type === '与父母或子女合住');
+            const hezhuPeople = hezhuAll.reduce((s, d) => s + d.people, 0);
+            const hezhuHouseholds = hezhuAll.reduce((s, d) => s + (d.households || 0), 0);
+
+            // 全部常住人口
+            const changzhuAll = rawData.filter(d => d.residency === '常住');
+            const changzhuTotalPeople = changzhuAll.reduce((s, d) => s + d.people, 0);
+
+            // 已购公房 + 其他产权型保障性住房总计
+            const yigouAll = rawData.filter(d => d.type === '已购公房');
+            const yigouHousing = yigouAll.reduce((s, d) => s + d.housing, 0);
+
+            container.innerHTML = `
+            <div class="analysis-wrapper">
+                <div class="section-title">北京市人房关系深度解析</div>
+                <p class="section-subtitle">基于2023年人口与住房调查数据的结构性分析</p>
+
+                <div class="key-metrics">
+                    <div class="metric-card">
+                        <span class="metric-value">${jj_ziyou_rate}%</span>
+                        <span class="metric-label">京籍常住人口住房自有率</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value warn">${fjj_zufang_rate}%</span>
+                        <span class="metric-label">非京籍常住人口租房比例</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value warn">${fjj_informal_rent_rate}%</span>
+                        <span class="metric-label">非京籍租房者中非正规居住占比</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value">${jj_yigou_rate}%</span>
+                        <span class="metric-label">京籍自有房中已购公房占比</span>
+                    </div>
+                </div>
+
+                <h3>一、非正规居住问题：规模大、涉及面广</h3>
+                <p>在北京市的住房体系中，"非正规居住"涵盖在<span class="stat-warn">集体土地上的宅基地住房、小产权房屋、城中村农村公寓，以及合租群体和产业工人宿舍</span>等居住形态。这些居住形态的共同特征是：产权不完整、居住条件参差、缺乏有效的市场化退出机制。</p>
+                <p>从数据来看，仅非京籍常住租赁人口中，居住在宅基地住房（54万人）、小产权房屋（33万人）、城中村农村公寓（80万人）、合租群体（151万人）等非正规住房中的人口合计达<span class="stat-warn">${rentInformalPeople}万人</span>，这还不包括415万实有非常住人口——他们几乎全部居住在城中村宅基地、小产权房和农村公寓等非正规住房中。</p>
+                <p>非正规居住的长期存在，反映的是北京市正规租赁市场在供给结构和价格区间上，尚无法充分覆盖中低收入流动人口的住房需求，也说明保障性租赁住房的供给规模相对于实际需求仍有较大缺口。</p>
+
+                <h3>二、非京籍人口的住房困境：租赁依赖深、居住品质低</h3>
+                <p>非京籍常住人口约<span class="stat-highlight">${fjj_total_people}万人</span>，其中<span class="stat-warn">${fjj_zufang_rate}%依赖租赁</span>解决居住问题。而在这些租房群体中，约有<span class="stat-warn">${fjj_informal_rent_rate}%</span>居住在宅基地、小产权房、城中村或以合租形式居住，居住品质和安全保障相对较差。</p>
+                <p>具体来看，非京籍租赁人口的居住结构呈现以下特点：</p>
+                <ul>
+                    <li>在正规市场租赁商品住房和已购公房的约有<span class="stat-highlight">130万人</span>（商品住房88万 + 已购公房88万），占租赁人口的较大比例，但人均居住面积和居住成本均面临压力；</li>
+                    <li>以合租形式居住的达<span class="stat-warn">${hezuPeople}万人</span>，占非京籍常住总人口的12%，这部分人群的居住稳定性和私密性均较弱；</li>
+                    <li>产业工人宿舍容纳约<span class="stat-highlight">97万人</span>，白领公寓约16万人，这类集体居住形态虽有一定组织管理，但居住空间狭小、设施简陋的问题较为普遍；</li>
+                    <li>居住在城中村农村公寓的约80万人，加上实有人口中同类居住形态的60万人，合计约<span class="stat-warn">140万人</span>长期生活在城中村环境中。</li>
+                </ul>
+                <p>相比之下，京籍常住人口的租赁规模仅<span class="stat-highlight">85万人</span>，且以直管公房（34万）、公共租赁住房（17万）等政策性保障渠道为主，居住品质和稳定性明显优于非京籍人口。这种结构性差异，揭示了户籍制度在住房保障资源分配中的深层影响。</p>
+
+                <h3>三、京籍居民的住房资产隐忧：已购公房老化与价值减损</h3>
+                <p>京籍常住人口的住房自有率达<span class="stat-highlight">${jj_ziyou_rate}%</span>，表面看似"安居乐业"。但深入分析自有住房的结构可以发现，<span class="stat-warn">仅有${jj_shangpin_rate}%为市场化商品住房（${jj_shangpin_zy_housing}万套）</span>，其余为：</p>
+                <ul>
+                    <li><span class="stat-warn">已购公房${jj_yigou_housing}万套</span>，占京籍自有住房的${jj_yigou_rate}%——这是京籍住房资产中最大的隐忧。房改房普遍建于1980—2000年代，房龄已达25—45年，面临建筑老化、设施落后、能耗较高等问题。更为关键的是，在近两年房地产市场持续下行、二手房价格全面回调的背景下，房改房因户型落后、社区老旧、物业管理薄弱，其市场流通性和价值保值能力首当其冲受到冲击，部分区域房改房价格跌幅甚至超过同区域商品房；</li>
+                    <li>其他产权型保障性住房${jj_baozhang_housing}万套（含共有产权住房3万套），受限于产权不完整和转让限制，流动性极低；</li>
+                    <li>宅基地住房及小产权房合计<span class="stat-warn">${jj_informal_housing}万套</span>（占${jj_informal_rate}%），产权法律地位模糊，无法进入正规交易市场。</li>
+                </ul>
+                <p>这意味着，京籍居民看似拥有的"住房资产"，相当大比例是<span class="stat-warn">低流动性、持续贬值或法律风险较高</span>的非标准化资产。在人口老龄化加速、以房养老需求增长的背景下，这些住房资产能否有效变现和价值保全，是一个值得关注的系统性问题。</p>
+
+                <h3>四、隐性住房压力："与父母或子女合住"的结构性信号</h3>
+                <p>数据显示，约有<span class="stat-warn">${hezhuPeople}万人（${hezhuHouseholds}万户）</span>以"与父母或子女合住"形式居住，对应<span class="stat-highlight">0套独立住房</span>。这部分人群中，京籍约80万人、非京籍约15万人。这既反映了代际支持的传统居住文化，也暗含了相当一部分家庭——尤其是年轻家庭——缺乏独立住房能力的客观现实。</p>
+                <p>在房价长期高位运行的北京市场，合住现象背后往往是购房门槛过高、租赁市场不够友好等多重因素的叠加。当这些家庭未来需要独立居住时，将转化为新增的刚性住房需求或租赁需求。</p>
+
+                <h3>五、实有人口：住房管理的"灰色地带"</h3>
+                <p>约<span class="stat-warn">${shiyou_people}万实有（非常住）人口</span>全部为非京籍，以集体居住和租赁形式分布在各类非正规住房中。其中居住在集体土地上的比例达<span class="stat-warn">${shiyou_jiti_rate}%</span>（${shiyou_jiti_people}万人），主要集中在城乡结合部的宅基地住房（260万人）、城中村农村公寓（60万人）和小产权房屋（35万人）。</p>
+                <p>这部分人口的住房几乎完全游离于正规住房管理体系之外，在消防安全、卫生防疫、治安管理等方面存在较大的公共管理风险。他们的居住问题既是城市治理的难点，也是社会公平和基本公共服务均等化需要正视的课题。</p>
+
+                <h3>综合研判</h3>
+                <p>北京市当前的人房关系呈现出<span class="stat-warn">"总量不缺、结构失衡、品质分化"</span>的基本格局。全市约896万套住房对应2,604万人口（含常住与实有），户均住房约1.09套，从总量看并不短缺。但问题集中体现在三个层面：</p>
+                <ul>
+                    <li><span class="stat-highlight">所有权结构失衡</span>：京籍自有率高但资产质量参差，非京籍高度依赖租赁且大量居住在非正规住房中；</li>
+                    <li><span class="stat-highlight">居住品质分化严重</span>：从商品住房到城中村公寓，同一城市中居住品质跨越巨大，户籍身份在很大程度上决定了居住品质；</li>
+                    <li><span class="stat-highlight">住房资产风险积聚</span>：大量房改房和保障性住房面临老化和贬值，宅基地与小产权房的产权困境长期悬而未决，这些都构成了住房市场的潜在系统性风险。</li>
+                </ul>
+                <p>解决上述问题，需要在加大保障性租赁住房供给、推进城中村改造、完善房改房更新机制、探索集体土地住房产权改革等多个维度协同发力，逐步构建起与超大城市多元人口结构相匹配的住房保障体系。</p>
+            </div>`;
+        }
+
+        drawSankey(currentMetric, false);
+        renderDataTable();
+        renderAnalysis();
+    </script>
+</body>
+</html>
