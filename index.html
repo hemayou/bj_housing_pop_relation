@@ -127,7 +127,7 @@
             font-weight: 500;
         }
 
-        select {
+        select, input[type=number] {
             padding: 0.5rem 1rem;
             border: 1px solid var(--color-border);
             border-radius: 8px;
@@ -136,6 +136,11 @@
             font-size: 0.9rem;
             cursor: pointer;
         }
+
+        input[type=number] { width: 70px; }
+
+        .controls-row { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+        .sep { width: 1px; height: 24px; background: var(--color-border); margin: 0 0.25rem; }
 
         #chart {
             background: var(--color-surface);
@@ -429,7 +434,7 @@
         <h1>北京市人房关系桑基图</h1>
         <p class="subtitle">单位：万套（间） / 万人</p>
         
-        <div class="controls">
+        <div class="controls-row">
             <button class="btn" id="playBtn">▶ 播放动画</button>
             <label for="metricSelect">数据指标：</label>
             <select id="metricSelect">
@@ -437,6 +442,21 @@
                 <option value="households">户数（万户）</option>
                 <option value="housing" selected>房屋套数（万套/间）</option>
                 <option value="combined">人房联动</option>
+            </select>
+            <div class="sep"></div>
+            <label>字号：</label>
+            <input type="number" id="fontSizeInput" value="13" min="8" max="24" step="1">
+            <label>px</label>
+            <div class="sep"></div>
+            <label>导出：</label>
+            <button class="btn" id="exportSvgBtn">SVG 矢量</button>
+            <button class="btn" id="exportPngBtn">PNG 栅格</button>
+            <label>分辨率倍数：</label>
+            <select id="pngScale">
+                <option value="1">1x</option>
+                <option value="2" selected>2x</option>
+                <option value="3">3x</option>
+                <option value="4">4x</option>
             </select>
         </div>
 
@@ -599,6 +619,7 @@
         };
 
         let currentMetric = 'housing';
+        let labelFontSize = 13;
         let svg, tooltip, defs;
         const width = 1600;
         const height = 850;
@@ -984,7 +1005,7 @@
                             .attr('y', y)
                             .attr('dy', '0.35em')
                             .attr('text-anchor', anchor)
-                            .attr('font-size', '13px')
+                            .attr('font-size', labelFontSize + 'px')
                             .attr('font-weight', '500')
                             .attr('fill', 'var(--color-text)')
                             .attr('opacity', animate ? 0 : 1)
@@ -994,7 +1015,7 @@
                             .attr('x', x)
                             .attr('y', y - 12)
                             .attr('text-anchor', anchor)
-                            .attr('font-size', '13px')
+                            .attr('font-size', labelFontSize + 'px')
                             .attr('font-weight', '500')
                             .attr('fill', 'var(--color-text)')
                             .attr('opacity', animate ? 0 : 1)
@@ -1004,7 +1025,7 @@
                             .attr('x', x)
                             .attr('y', y + 4)
                             .attr('text-anchor', anchor)
-                            .attr('font-size', '12px')
+                            .attr('font-size', (labelFontSize - 1) + 'px')
                             .attr('font-weight', '500')
                             .attr('fill', 'var(--color-text)')
                             .attr('opacity', animate ? 0 : 1)
@@ -1014,7 +1035,7 @@
                             .attr('x', x)
                             .attr('y', y + 20)
                             .attr('text-anchor', anchor)
-                            .attr('font-size', '11px')
+                            .attr('font-size', (labelFontSize - 2) + 'px')
                             .attr('fill', 'var(--color-text-secondary)')
                             .attr('opacity', animate ? 0 : 1)
                             .text(`(${node.peopleValue.toFixed(0)}万人，${node.householdsValue.toFixed(0)}万户)`);
@@ -1025,7 +1046,7 @@
                         .attr('y', y)
                         .attr('dy', '0.35em')
                         .attr('text-anchor', anchor)
-                        .attr('font-size', '13px')
+                        .attr('font-size', labelFontSize + 'px')
                         .attr('font-weight', '500')
                         .attr('fill', 'var(--color-text)')
                         .attr('opacity', animate ? 0 : 1)
@@ -1067,6 +1088,65 @@
         document.getElementById('metricSelect').addEventListener('change', (e) => {
             currentMetric = e.target.value;
             drawSankey(currentMetric, false);
+        });
+
+        document.getElementById('fontSizeInput').addEventListener('input', (e) => {
+            labelFontSize = Math.max(8, Math.min(24, parseInt(e.target.value) || 13));
+            drawSankey(currentMetric, false);
+        });
+
+        // Export SVG
+        document.getElementById('exportSvgBtn').addEventListener('click', () => {
+            const svgEl = document.querySelector('#chart svg');
+            if (!svgEl) return;
+            const clone = svgEl.cloneNode(true);
+            // Inline computed styles for standalone SVG
+            clone.querySelectorAll('[fill^="var("]').forEach(el => {
+                const computed = getComputedStyle(svgEl.querySelector(`[fill="${el.getAttribute('fill')}"]`) || el);
+                el.setAttribute('fill', computed.fill || '#13343b');
+            });
+            clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            const blob = new Blob([new XMLSerializer().serializeToString(clone)], {type: 'image/svg+xml'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = '北京市人房关系桑基图.svg';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        });
+
+        // Export PNG
+        document.getElementById('exportPngBtn').addEventListener('click', () => {
+            const svgEl = document.querySelector('#chart svg');
+            if (!svgEl) return;
+            const scale = parseInt(document.getElementById('pngScale').value) || 2;
+            const vb = svgEl.viewBox.baseVal;
+            const w = vb.width || 1600, h = vb.height || 850;
+            const canvas = document.createElement('canvas');
+            canvas.width = w * scale;
+            canvas.height = h * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#fffffe';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Resolve CSS vars in SVG text fills
+            const clone = svgEl.cloneNode(true);
+            clone.querySelectorAll('text').forEach(t => {
+                const orig = svgEl.querySelector('text');
+                if (orig) {
+                    const cs = getComputedStyle(orig);
+                    if (t.getAttribute('fill')?.startsWith('var(')) t.setAttribute('fill', cs.fill || '#13343b');
+                }
+            });
+            clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            const svgData = new XMLSerializer().serializeToString(clone);
+            const img = new Image();
+            img.onload = () => {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const a = document.createElement('a');
+                a.href = canvas.toDataURL('image/png');
+                a.download = `北京市人房关系桑基图_${w*scale}x${h*scale}.png`;
+                a.click();
+            };
+            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
         });
 
         // =============================================
